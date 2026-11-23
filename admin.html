@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Add appointment | Wax On Wheels</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:32rem;margin:2rem auto;padding:0 1rem;color:#1a1a1a}
+h1{font-size:1.4rem}label{display:block;margin:.8rem 0 .2rem;font-weight:600;font-size:.9rem}
+input,select,textarea{width:100%;padding:.6rem;border:1px solid #bbb;border-radius:6px;font:inherit;box-sizing:border-box}
+button{margin-top:1.2rem;width:100%;padding:.8rem;background:#e42019;color:#fff;border:0;border-radius:6px;font:inherit;font-weight:700;cursor:pointer}
+#msg{margin-top:1rem;font-weight:600}.row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
+</style></head><body>
+<h1>Add an appointment</h1>
+<p>Adds a <b>confirmed</b> (red) event to the Wax On Wheels Google Calendar. Website requests show up there as yellow <b>PENDING</b> events.</p>
+<form id="f">
+<label>Admin password<input id="pw" type="password" required autocomplete="current-password"></label>
+<label>Customer name<input name="name" required></label>
+<div class="row"><div><label>Phone<input name="phone" type="tel"></label></div><div><label>Price ($)<input name="price" inputmode="decimal"></label></div></div>
+<label>Service<input name="service" placeholder="Premium Detail, SUV" required></label>
+<label>Vehicle<input name="vehicle" placeholder="2021 Porsche Cayman"></label>
+<label>Address<input name="address"></label>
+<div class="row"><div><label>Date<input name="date" type="date" required></label></div><div><label>Start time<input name="time" type="time" value="09:00" required></label></div></div>
+<label>Notes<textarea name="notes" rows="3"></textarea></label>
+<button>Add to calendar</button><p id="msg" role="status"></p>
+</form>
+<script>
+document.getElementById("f").addEventListener("submit",async e=>{e.preventDefault();
+const m=document.getElementById("msg");m.textContent="Saving...";
+try{const r=await fetch("/.netlify/functions/manual",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+document.getElementById("pw").value},body:JSON.stringify(Object.fromEntries(new FormData(e.target)))});
+const j=await r.json();m.textContent=r.ok?"Added to the calendar.":"Error: "+(j.error||r.status);if(r.ok){e.target.querySelectorAll("input:not([type=password]),textarea").forEach(i=>{if(i.name!=="time")i.value=""})}}
+catch(x){m.textContent="Network error."}});
+</script></body></html>

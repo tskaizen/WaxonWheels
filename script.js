@@ -49,18 +49,27 @@
     if (want) for (var i = 0; i < sel.options.length; i++) if (sel.options[i].value === want) sel.selectedIndex = i;
   }
 
-  // Form submit: no backend on GitHub Pages, so hand the request to the visitor's email app
+  // Form submit: post to the booking function (creates a pending calendar event); fall back to email if it fails
   var form = document.querySelector("form[data-quote]");
-  if (form) form.addEventListener("submit", function (e) {
-    e.preventDefault();
-    if (form.querySelector("[name=bot-field]").value) return;
-    var lines = [];
-    new FormData(form).forEach(function (v, k) { if (k !== "bot-field" && v) lines.push(k.replace(/_/g, " ") + ": " + v); });
-    var opt = form.querySelector("#service").selectedOptions[0];
-    var subject = "Quote request" + (opt && opt.value ? ": " + opt.text : "");
-    location.href = "mailto:" + form.dataset.to + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(lines.join("\n"));
-    form.closest(".form-card").classList.add("sent");
-  });
+  if (form) {
+    var pd = document.getElementById("pd"); if (pd) pd.min = new Date().toISOString().slice(0, 10);
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (form.querySelector("[name=bot-field]").value) return;
+      var data = {}; new FormData(form).forEach(function (v, k) { data[k] = v; });
+      var opt = form.querySelector("#service").selectedOptions[0];
+      data.service_label = opt ? opt.text : data.service;
+      var btn = form.querySelector("button[type=submit]"); btn.disabled = true;
+      var done = function () { form.closest(".form-card").classList.add("sent"); };
+      var fallback = function () {
+        var lines = []; Object.keys(data).forEach(function (k) { if (k !== "bot-field" && data[k]) lines.push(k.replace(/_/g, " ") + ": " + data[k]); });
+        location.href = "mailto:" + form.dataset.to + "?subject=" + encodeURIComponent("Quote request: " + data.service_label) + "&body=" + encodeURIComponent(lines.join("\n"));
+        done();
+      };
+      fetch("/.netlify/functions/book", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) })
+        .then(function (r) { if (r.ok) done(); else fallback(); }).catch(fallback);
+    });
+  }
 
   // Before/after and luxury photos open in the same lightbox
   var lb2 = document.querySelector(".lightbox");

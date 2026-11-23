@@ -1,0 +1,7 @@
+{
+  "name": "waxonwheels-booking",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Booking backend for Wax On Wheels (Netlify Functions + Google Calendar)",
+  "dependencies": { "googleapis": "^144.0.0" }
+}
